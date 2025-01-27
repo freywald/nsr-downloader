@@ -1,0 +1,73 @@
+#!/bin/bash
+
+# AUDIO+VIDEO QUEUE
+#
+# downloads audio and video files into mka/mkv container files with thumbnails, subtitles & chapters all embedded
+#
+#
+
+# CONFIGURATION
+__download_with_configuration \
+`# run yt-dlp with these options:…` \
+yt-dlp  \
+--live-from-start \
+--windows-filenames \
+--output-na-placeholder "UNKNOWN_PLACEHOLDER_DEBUG_REMOVE" \
+`# only last run should use download archive` \
+--no-download-archive \
+`# show progress` \
+--console-title --progress --newline --quiet \
+`# output file template` \
+--parse-metadata "(%(upload_date>%d.%m.%Y)s):%(upload_date_with_parentheses)s" \
+--parse-metadata "(%(release_date>%d.%m.%Y)s):%(release_date_with_parentheses)s" \
+--parse-metadata "%(title|)s:%(title_with_separator)s" \
+--replace-in-metadata "title_with_separator" "\s-\s" " – " \
+-o "%(webpage_url_domain.:-4)s/files/%(channel)s%(channel_id& [{}]|)s/%(artist&{} – |)s%(album|)s/%(title&{}|)s%(upload_date_with_parentheses,release_date_with_parentheses& {}|)s%(display_id& [{}]|)s/%(title_with_separator,title|)s.%(ext)s" \
+`# quality and file format` \
+-f bestvideo+bestaudio \
+--merge-output-format mkv --remux-video mkv \
+--post-overwrites \
+`# thumbnails` \
+--write-thumbnail \
+--convert-thumbnails png \
+--embed-thumbnail \
+`# subtitles` \
+--sub-lang en \
+--write-auto-subs \
+--write-sub \
+--convert-subs srt \
+--embed-subs \
+`# embed files` \
+--embed-metadata \
+--embed-info-json \
+--embed-chapters \
+
+
+__download_with_configuration \
+`# run yt-dlp with the options:…` \
+yt-dlp \
+`# show progress` \
+--console-title --progress --newline \
+`# output file format` \
+--parse-metadata "(%(display_id)s):%(display_id_with_parentheses)s" \
+--parse-metadata "(%(upload_date>%d.%m.%Y)s):%(upload_date_with_parentheses)s" \
+--parse-metadata "(%(release_date>%d.%m.%Y)s):%(release_date_with_parentheses)s" \
+-o "%(webpage_url_domain.:-4)s/files/%(channel)s/%(album|)s/%(title&{}|)s%(upload_date_with_parentheses,release_date_with_parentheses& {}|)s%(display_id& [{}]|)s/%(title)s.%(ext)s" \
+`#-o "%(channel)s/%(title).150B/%(title).200Bs. – %(id)s.%(ext)s"` \
+`# quality and file format` \
+--extract-audio \
+--remux mka \
+`# thumbnails` \
+--write-thumbnail \
+--convert-thumbnails png \
+--embed-thumbnail \
+`# subtitles` \
+--sub-lang en \
+--write-auto-subs \
+--write-sub \
+--convert-subs srt \
+--embed-subs \
+`# embed files` \
+--embed-metadata \
+--embed-info-json \
+--embed-chapters \
