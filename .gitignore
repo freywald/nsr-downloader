@@ -1,0 +1,9 @@
+OLD
+/var/logs/*
+/var/queues/*
+!/var/queues-templates/*
+!/templates
+configuration/defaults
+/var/archive/*
+/var/template-instances/*
+.idea
