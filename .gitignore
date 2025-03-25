@@ -1,9 +1,9 @@
-OLD
 /var/logs/*
 /var/queues/*
 !/installation/queues-templates/*
 !/templates
 configuration/defaults
+configuration/defaults_ju
 /var/archive/*
 /var/template-instances/*
 .idea

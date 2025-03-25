@@ -1,6 +1,6 @@
 #!/bin/bash
-source "base"
-source "${__script_path:?}/configuration/defaults"
+source -- "base"
+source -- "${__script_path:?}/configuration/defaults"
 
 # defaults
 local_run=true
@@ -103,9 +103,9 @@ known_parameters=(
 )
 
 for parameter in $original_program_arguments; do
-	parameter="${parameter%=*}"
-	if ! array_contains "$parameter" "${known_parameters[@]}"; then
-		if [[ ${parameter:0:2} == "--" ]]; then
+	name="${parameter%=*}"
+	if ! array_contains "$name" "${known_parameters[@]}"; then
+		if [[ "${name:0:2}" == "--" ]]; then
 			forwarded_parameters+=( "$parameter" )
 		fi
 	fi
@@ -113,22 +113,22 @@ done
 
 current_date="$(date +%Y%m%d%H%M%S)"
 download_archive=""
-if [[ $local_run == "true" ]]; then
+if [[ "$local_run" == "true" ]]; then
 	local_run=true
 else
 	local_run=false
 fi
-if [[ $force_download == "true" ]]; then
+if [[ "$force_download" == "true" ]]; then
 	force_download=true
 else
 	force_download=false
 fi
-if [[ $verbose == "true" ]]; then
+if [[ "$verbose" == "true" ]]; then
 	verbose=true
 else
 	verbose=false
 fi
-if [[ $quiet == "true" ]]; then
+if [[ "$quiet" == "true" ]]; then
 	quiet=true
 else
 	quiet=false
@@ -137,21 +137,21 @@ if $verbose && $quiet; then
 	echo "ERROR! Program options '--verbose' and '--quiet' are mutually exclusive." >&2
 	exit 1
 fi
-if [[ $simulate == "true" ]]; then
+if [[ "$simulate" == "true" ]]; then
 	simulate=true
 else
 	simulate=false
 fi
-if [[ $regenerate_queue == "true" ]]; then
+if [[ "$regenerate_queue" == "true" ]]; then
 	regenerate_queue=true
 else
 	regenerate_queue=false
 fi
 
 if $local_run; then
-	file="$(ls ./*".sources")" || file="" #take the first sources files
-	if [[ $file != "" ]]; then
-		template_base_name="$(basename "${file%.*}")" #the base file name specifies also the name of the download template
+	file="$(ls -- ./*".sources" 2> "/dev/null")" || file="" # take the first sources file
+	if [[ "$file" != "" ]]; then
+		template_base_name="$(basename -- "${file%.*}")" # the base file name specifies also the name of the download template
 		from_file="$template_base_name:$file"
 		target_directory="files"
 		mkdir --parents -- "$target_directory/"
@@ -160,7 +160,7 @@ if $local_run; then
 fi
 
 #eval set -- "${forwarded_parameters[*]}"
-cd "$base_directory/" || exit
+cd "$base_directory/" || exit 1
 
 mkdir --parents -- "${__script_path:?}/var/logs/"
 log="${__script_path:?}/var/logs/application.log"
@@ -168,7 +168,7 @@ touch -- "$log"
 
 given_queues=("$@")
 
-trap 'echo -e "\n\n▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔\nCaught SIGNINT/CTR+C. Program aborted.\n\n▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔\n";if [[ -s "$queue_failed_items_log_file" ]]; then list_failed_downloads; fi;echo -e "\n\n";exit' SIGINT
+trap 'echo -e "\n\n▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔\nCaught SIGNINT/CTR+C. Program aborted.\n\n▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔\n";if [[ -s "$queue_failed_items_log_file" ]]; then list_failed_downloads; fi;echo -e "\n\n";exit 1' SIGINT
 
 function __download_with_configuration() {
 	# linearized array data with arbitrary wideness
@@ -186,7 +186,7 @@ function list_failed_downloads() {
 		known_to_fail=()
 		echo -e "██  List of failed items:"
 		while IFS= read -r item; do
-			if grep -Fxq "$item" "$link_known_fail_list_full_file_path"; then
+			if [[ -f "$link_known_fail_list_full_file_path" ]] && grep -Fxq "$item" "$link_known_fail_list_full_file_path"; then
 				known_to_fail+=("$item")
 			else
 				echo -e "██  \t\t\t\t\t\t  • $item"
@@ -248,11 +248,11 @@ function run_queue() {
 
 	if [[ ! -f "$queue_file" ]]; then
 		echo>&2 "ERROR: queue file '$queue_file' does not exist"
-		exit
+		exit 1
 	fi
 
 	# shellcheck source=/dev/null
-	source "$queue_file"
+	source -- "$queue_file"
 
 	data_length_counter=${#data[@]}
 	data_items_processed=0
@@ -355,7 +355,7 @@ function run_queue() {
 			reversed_data_bag=()
 			for (( i=${#data_bag[@]}-1; i>=0; i-- )); do
 				local value="${data_bag[i]}"
-				if $force_download && [[ -f "$local_queue_file_name" ]] && [[ $value = "--download-archive="* ]]; then
+				if $force_download && [[ -f "$local_queue_file_name" ]] && [[ "$value" = "--download-archive="* ]]; then
 					: # filter parameter instance '--download-archive' in '--from-file'-mode, so the queue archive index file can be ignored thus '--force' can be enforced properly
 				else
 					reversed_data_bag+=("$value")
@@ -469,7 +469,7 @@ function run_default_queues() {
 	for file in "${__script_path:?}/var/queues"/*.queue; do
 		[[ -e "$file" ]] || continue
 
-		queue_base_name="$(basename "${file%.*}")"
+		queue_base_name="$(basename -- "${file%.*}")"
 		queue_full_file_path="${__script_path:?}/var/queues/$queue_base_name.queue"
 
 		if (( ${#default_queues[@]} != 0 )); then
@@ -487,7 +487,7 @@ function run_default_queues() {
 if [[ -n "$from_file" ]]; then
 	if (( ${#given_queues[@]} != 0 )); then
 		echo>&2 "ERROR: use option '--from-file' only to download from a file OR supply existing queues [ supplied was: ${given_queues[*]} ]"
-		exit
+		exit 1
 	fi
 
 	template_name="${from_file%:*}"
@@ -506,11 +506,12 @@ if [[ -n "$from_file" ]]; then
 	queue_template_full_file_path="${__script_path:?}/templates/$template_name.template"
 	if [[ ! -f "$queue_template_full_file_path" ]]; then
 		echo>&2 "ERROR: queue template file '$queue_template_full_file_path' does not exist"
-		exit
+		exit 1
 	fi
 
 	local_download_index="queue-$template_name.index"
 	local_queue="queue-$template_name.queue"
+
 ###
 	#local_log_file_full_file_path="queue-$queue_name.log"
 	#local_log_file_full_file_path="$(realpath --quiet -- "$local_log_file_full_file_path")"
@@ -520,6 +521,7 @@ if [[ -n "$from_file" ]]; then
 	#local_log_file_failed_items_log_file_full_file_path="$(realpath --quiet -- "$local_log_file_failed_items_log_file_full_file_path")"
    # touch -- "$local_log_file_failed_items_log_file_full_file_path"
 ###
+
 	if $regenerate_queue; then
 		# shellcheck disable=SC2064
 		trap "[[ ! -e \"$local_queue\" && -e \"$local_queue.backup\" ]] && mv -- \"$local_queue.backup\" \"$local_queue\" && echo -e \"\\n\\nAborted. Queue file '$local_queue' was restored from backup!\"" EXIT QUIT
@@ -542,7 +544,7 @@ if [[ -n "$from_file" ]]; then
 	else
 		download_archive="$local_download_index"
 		if $regenerate_queue; then
-			if [[ -f $download_archive ]]; then
+			if [[ -f "$download_archive" ]]; then
 				mv -- "$download_archive" "$download_archive.backup"
 			fi
 		fi
@@ -550,7 +552,7 @@ if [[ -n "$from_file" ]]; then
 		echo -e "██  generating queue:\t\t$template_name\n"
 
 		# shellcheck disable=SC1090
-		source "${__script_path:?}/enqueue-data-from-file" --create-from-template --force "$template_name" "$link_list_full_file_path" "$download_archive"
+		source -- "${__script_path:?}/enqueue-data-from-file" --create-from-template --force "$template_name" "$link_list_full_file_path" "$download_archive"
 
 		echo -e "\n\n"
 
@@ -571,12 +573,12 @@ if [[ -n "$from_file" ]]; then
 		fi
 	fi
 
-	exit
+	exit 1
 fi
 
 if (( ${#given_queues[@]} != 0 )); then
 	for queue_full_path in "${given_queues[@]}"; do
-		queue_base_name="$(basename "${queue_full_path%.*}")"
+		queue_base_name="$(basename -- "${queue_full_path%.*}")"
 		download_archive="${__script_path:?}/var/archive/queue-$queue_base_name-date-$current_date.index"
 		run_queue "$queue_base_name" "$queue_full_path"
 	done

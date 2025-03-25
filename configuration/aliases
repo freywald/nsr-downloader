@@ -15,7 +15,7 @@ function get_library_path()
 	done
 
 	cd -P "$(dirname -- "$source")/../" > "/dev/null" 2>&1 && pwd
-	cd -- "$former_directory" || exit
+	cd -- "$former_directory" || exit 1
 }
 
 function d() {

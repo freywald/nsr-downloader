@@ -25,6 +25,6 @@ if [[ ! -d "var/queues" ]]; then
 fi
 
 # shellcheck disable=SC2016
-echo 'source "$HOME/bin/nsr-downloader/configuration/aliases"' >> "$HOME/.bash_aliases"
+echo 'source -- "$HOME/bin/nsr-downloader/configuration/aliases"' >> "$HOME/.bash_aliases"
 set +x
 echo -ne "\n\nSUCCESS!\n"

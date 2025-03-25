@@ -41,7 +41,7 @@ function set_script_path()
 	done
 
 	__script_path="$(cd -P "$(dirname -- "$source")" > "/dev/null" 2>&1 && pwd)"
-	cd -- "$former_directory" || exit
+	cd -- "$former_directory" || exit 1
 
 	export __script_path
 }

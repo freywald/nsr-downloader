@@ -2,10 +2,10 @@
 
 if (( $# < 2 )); then
 	echo "Usage: $0 <file location of file, read line by line, line termination by newline character>"
-	exit
+	exit 1
 fi
 
-source "base"
+source -- "base"
 
 force_download=false
 create_from_template=false
@@ -43,12 +43,12 @@ while true; do
 	esac
 done
 
-if [[ $force_download == "true" ]]; then
+if [[ "$force_download" == "true" ]]; then
 	force_download=true
 else
 	force_download=false
 fi
-if [[ $create_from_template == "true" ]]; then
+if [[ "$create_from_template" == "true" ]]; then
 	create_from_template=true
 else
 	create_from_template=false

@@ -3,10 +3,10 @@
 if (( $# == 0 )); then
 	echo "Usage: $0 <queue name> <data>"
 	echo "Usage: $0 <queue template name>:<queue file location> <download URL>"
-	exit
+	exit 1
 fi
 
-source "base"
+source -- "base"
 
 force=false
 if [[ "$1" == "--force" ]]; then
