@@ -260,7 +260,7 @@ function run_queue() {
 	data_items_failed=0
 	data_bag_incomplete=false
 
-	for line in "${data[@]}"; do	
+	for line in "${data[@]}"; do
 		((data_length_counter--))
 
 		# insert marker found, continue
@@ -420,6 +420,9 @@ function run_queue() {
 			! $quiet && echo -e "██  Queue:\t\t\t\t\t\t$queue_base_name"
 			$debug && echo -e "██"
 			$debug && echo -e "██  Log file:\t\t\t$queue_log_file"
+			! $quiet && echo -e "██"
+			$quiet && echo "$url"
+			! $quiet && echo -e "██  Item #:\t\t\t\t\t$data_items_processed"
 			! $quiet && echo -e "██"
 			$quiet && echo "$url"
 			! $quiet && echo -e "██  Resource:\t\t\t\t\t$url"
